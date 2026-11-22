@@ -86,6 +86,20 @@
       });
     }
 
+    // Redmine also sets date values from script without a change event; query filters,
+    // for example, clear them with jQuery's .val(''). Wrap this input's value setters so
+    // the Jalali field always shows the real value.
+    ['value', 'valueAsDate', 'valueAsNumber'].forEach(function (prop) {
+      var native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, prop);
+      if (!native || !native.set) return;
+      Object.defineProperty(src, prop, {
+        configurable: true,
+        get: function () { return native.get.call(this); },
+        set: function (v) { native.set.call(this, v); display(); }
+      });
+    });
+    vis._jalaliDisplay = display;
+
     display();
     vis._jalaliCommit = commit;
     vis.addEventListener('focus', function () {
@@ -122,6 +136,12 @@
     }
   }
 
+  // form.reset() and the back/forward cache restore values without calling the setters.
+  function redisplayAll(root) {
+    var fields = root.querySelectorAll ? root.querySelectorAll('input.jalali-date') : [];
+    for (var i = 0; i < fields.length; i++) if (fields[i]._jalaliDisplay) fields[i]._jalaliDisplay();
+  }
+
   function enhanceAll(root) {
     var list = root.querySelectorAll ? root.querySelectorAll(SELECTOR) : [];
     for (var i = 0; i < list.length; i++) enhance(list[i]);
@@ -151,6 +171,9 @@
     if (window.jQuery) window.jQuery(document).on('submit', 'form', guardSubmit);
 
     enhanceAll(document);
+    // The reset event fires before the values are restored, so redisplay afterwards.
+    document.addEventListener('reset', function (e) { setTimeout(function () { redisplayAll(e.target); }, 0); }, true);
+    window.addEventListener('pageshow', function (e) { if (e.persisted) redisplayAll(document); });
 
     // Redmine adds date inputs dynamically (query filters, modals, issue form refresh).
     new MutationObserver(function (mutations) {
