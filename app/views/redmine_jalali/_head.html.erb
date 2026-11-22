@@ -9,7 +9,11 @@
                  'days'           => RedmineJalali::Formatter.day_names.to_json,
                  'labels'         => { today: ::I18n.t('redmine_jalali.today', default: 'Today'),
                                        clear: ::I18n.t('redmine_jalali.clear', default: 'Clear'),
-                                       invalid: ::I18n.t('redmine_jalali.invalid_date', default: 'Invalid date') }.to_json
+                                       invalid: ::I18n.t('redmine_jalali.invalid_date', default: 'Invalid date'),
+                                       month: ::I18n.t('redmine_jalali.month', default: 'Month'),
+                                       year: ::I18n.t('redmine_jalali.year', default: 'Year'),
+                                       previousMonth: ::I18n.t('redmine_jalali.previous_month', default: 'Previous month'),
+                                       nextMonth: ::I18n.t('redmine_jalali.next_month', default: 'Next month') }.to_json
                } %>
   <%= stylesheet_link_tag 'redmine_jalali', plugin: 'redmine_jalali' %>
   <%= javascript_include_tag 'jalali', 'jalali-datepicker', 'redmine_jalali', plugin: 'redmine_jalali' %>
