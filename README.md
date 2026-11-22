@@ -20,6 +20,9 @@ Tested on Redmine 7.0.1 (`redmine:7.0.1-alpine`, Ruby 4.0, Rails 8.1, PostgreSQL
   value, so form posts and Redmine's own JavaScript behave as before.
 - Typed input accepts `1404/01/01`, `1404-1-1`, `۱۴۰۴/۰۱/۰۱`, or a Gregorian date
   such as `2025-03-21` (years >= 1700 are read as Gregorian).
+- An invalid typed date (for example `1404/12/30`, since 1404 is not a leap year)
+  stays in the field in red with a message, and the form is not sent until it is
+  fixed or cleared.
 - CSV import reads Jalali dates (years below 1700) in the date format chosen on
   the import page, with Latin or Persian digits, so an exported CSV can be
   imported back. A Jalali date that does not exist (e.g. `1404/12/30`) is
