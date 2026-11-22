@@ -10,19 +10,14 @@ module RedmineJalali
   }.freeze
 
   class << self
+    # format_date calls this for every date it renders, so the parsed result is kept
+    # until Redmine's settings cache hands back a different object (i.e. on a change).
     def settings
-      stored = begin
-        Setting.plugin_redmine_jalali
-      rescue StandardError
-        nil
-      end
-      # Only missing keys fall back to the defaults. An empty locale list is a real
-      # choice: it turns Jalali off, so it must not be replaced by the default 'fa'.
-      DEFAULT_SETTINGS.merge((stored || {}).to_h.transform_keys(&:to_s).compact)
+      config[:settings]
     end
 
     def enabled_locales
-      settings['enabled_locales'].to_s.split(/[\s,;]+/).map(&:downcase)
+      config[:locales]
     end
 
     # True when dates should be shown/entered as Jalali for the given locale.
@@ -31,13 +26,36 @@ module RedmineJalali
     end
 
     def persian_digits?
-      settings['persian_digits'].to_s == '1'
+      config[:persian_digits]
     end
 
     def week_start
       Integer(settings['week_start'].to_s, 10) % 7
     rescue ArgumentError
       6
+    end
+
+    private
+
+    def config
+      stored = begin
+        Setting.plugin_redmine_jalali
+      rescue StandardError
+        nil
+      end
+      cached = @config
+      return cached[:value] if cached && cached[:stored].equal?(stored)
+
+      # Only missing keys fall back to the defaults. An empty locale list is a real
+      # choice: it turns Jalali off, so it must not be replaced by the default 'fa'.
+      merged = DEFAULT_SETTINGS.merge((stored || {}).to_h.transform_keys(&:to_s).compact).freeze
+      value = {
+        settings: merged,
+        locales: merged['enabled_locales'].to_s.split(/[\s,;]+/).map(&:downcase).freeze,
+        persian_digits: merged['persian_digits'].to_s == '1'
+      }.freeze
+      @config = { stored: stored, value: value }
+      value
     end
   end
 end
